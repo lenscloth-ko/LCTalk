@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LCTalk.Web.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -57,6 +58,34 @@ namespace LCTalk.Web.Controllers
                 new { status = "success", data = conversations },
                 JsonRequestBehavior.AllowGet
             );
+        }
+
+        [HttpPost]
+        public JsonResult SendMessage()
+        {
+            if (Session["user"] == null)
+            {
+                return Json(new { status = "error", message = "User is not logged in" });
+            }
+
+            var currentUser = (User)Session["user"];
+
+            string socket_id = Request.Form["socket_id"];
+
+            Conversation convo = new Conversation
+            {
+                sender_id = currentUser.id,
+                message = Request.Form["message"],
+                receiver_id = Convert.ToInt32(Request.Form["contact"])
+            };
+
+            using (var db = new Models.ChatContext())
+            {
+                db.Conversations.Add(convo);
+                db.SaveChanges();
+            }
+
+            return Json(convo);
         }
     }
 }
